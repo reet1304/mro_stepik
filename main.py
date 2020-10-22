@@ -1,27 +1,37 @@
 import sys
+
 sys.stdin = open("input.txt", "r")
 
 
 class ClassModel():
-    def __init__(self):
+    def __init__(self, name="unnamed"):
+        self.name = name
         self.childs = {self}
-        self.parents = {self}
+        self.parents = set()
 
     def add_parents(self, parents):
         self.parents |= parents
-        for child in self.childs:
-            child.parents |= parents
         for p in parents:
+            self.parents |= p.parents
+
+        for c in self.childs:
+            c.parents |= self.parents
+
+        for p in self.parents:
             p.childs |= self.childs
         return self
 
-    def add_childs(self, childs):
-        self.childs |= childs
-        for parent in self.parents:
-            parent.childs |= childs
-        for c in childs:
-            c.parents |= self.parents
-        return self
+    def __repr__(self):
+        return ' '.join(
+            [self.name, 'CHILDS:', *[child.name for child in self.childs], 'PARENTS:', *[p.name for p in self.parents]])
+
+    # def add_childs(self, childs):
+    #     self.childs |= childs
+    #     for parent in self.parents:
+    #         parent.childs |= childs
+    #     for c in childs:
+    #         c.parents |= self.parents
+    #     return self
 
 
 models = dict()
@@ -29,14 +39,14 @@ models = dict()
 
 def create_model(name, parents=[]):
     if name not in models:
-        models[name] = ClassModel()
+        models[name] = ClassModel(name=name)
 
     paretns_set = set()
     for p_name in parents:
         if p_name not in models:
-            models[p_name] = ClassModel()
-        models[p_name].add_childs({models[name]})
+            models[p_name] = ClassModel(name=p_name)
         paretns_set.add(models[p_name])
+
     models[name].add_parents(paretns_set)
 
 
@@ -48,6 +58,8 @@ def is_ancestor(ancestor_name, child_name):
 
 
 def model_from_input(input_str):
+    if input_str[0] == '#':
+        return
     line = input_str.split(":")
     class_name = line[0].strip()
     if len(line) == 2:
@@ -57,13 +69,14 @@ def model_from_input(input_str):
         create_model(class_name)
 
 
-x = int(input())
-for i in range(x):
-    model_from_input(input())
-o = int(input())
-for i in range(o):
-    s = input()
-    s = s.split()
-    for i in s:
-        i.strip()
-    is_ancestor(s[0], s[1])
+if __name__ == "__main__":
+    x = int(input())
+    for i in range(x):
+        model_from_input(input())
+    o = int(input())
+    for i in range(o):
+        s = input()
+        s = s.split()
+        for i in s:
+            i.strip()
+        is_ancestor(s[0], s[1])
